@@ -14,6 +14,7 @@ import com.google.firebase.database.*
 
 import java.util.*
 
+
 class ChatActivity : AppCompatActivity() {
 
     private lateinit var speechRecognizer: SpeechRecognizer

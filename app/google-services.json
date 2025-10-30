@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378500103467",
+    "project_id": "voicetotextapp-1e3eb",
+    "storage_bucket": "voicetotextapp-1e3eb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378500103467:android:60807b37972fb923d3d96e",
+        "android_client_info": {
+          "package_name": "com.example.voicetotextapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt_66A-fRlAIf8NU92aYbV6cGJWBzmojM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

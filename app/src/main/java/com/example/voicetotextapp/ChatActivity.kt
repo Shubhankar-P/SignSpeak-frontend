@@ -16,6 +16,7 @@ import android.widget.Toast
 import android.content.Intent
 import android.view.View
 import android.view.MenuItem
+import androidx.activity.addCallback
 
 
 class ChatActivity : AppCompatActivity() {
@@ -103,17 +104,43 @@ class ChatActivity : AppCompatActivity() {
             btnSpeak.visibility = View.GONE
             textOutput.text = "Waiting for message..."
         }
+
+        onBackPressedDispatcher.addCallback(this) {
+            handleBackPressed()
+        }
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {  // back arrow pressed
-                finish()
+                handleBackPressed()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
+
+    private fun handleBackPressed() {
+        if (role == "sender") {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Leave Room?")
+                .setMessage("Leaving will delete this room for everyone. Do you want to continue?")
+                .setPositiveButton("Yes") { _, _ ->
+                    val roomRef = FirebaseDatabase.getInstance(
+                        "https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/"
+                    ).getReference("rooms").child(roomCode)
+                    roomRef.removeValue()
+                    Toast.makeText(this, "Room deleted", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .setNegativeButton("No", null)
+                .show()
+        } else {
+            finish()
+        }
+    }
+
 
 
     private fun setupSpeechRecognizer() {

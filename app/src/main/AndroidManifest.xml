@@ -16,9 +16,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VoiceToTextApp">
 
-        <!-- 👇 Add this line -->
+        <activity
+            android:name=".Sign2TextActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RoomOptionsActivity"
+            android:exported="false" /> <!-- 👇 Add this line -->
         <activity android:name=".ChatActivity" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -26,10 +30,10 @@
             android:theme="@style/Theme.VoiceToTextApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

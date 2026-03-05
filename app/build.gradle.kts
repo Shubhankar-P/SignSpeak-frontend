@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.voicetotextapp"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.voicetotextapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+
     // ✅ Add these for XML UI
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
@@ -59,6 +60,7 @@ dependencies {
 
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.google.firebase:firebase-analytics-ktx:22.5.0")
+    implementation(libs.androidx.activity)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

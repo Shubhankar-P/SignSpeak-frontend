@@ -28,7 +28,7 @@ class ChatActivity : AppCompatActivity() {
     private var role: String = ""
     private var roomCode: String = ""
     private lateinit var roomCodeText: TextView
-
+    private lateinit var predictedTextDisplay: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,9 +42,15 @@ class ChatActivity : AppCompatActivity() {
         roomCodeText = findViewById(R.id.roomCodeText)
         textOutput = findViewById(R.id.textOutput)
         btnSpeak = findViewById(R.id.btnSpeak)
+        predictedTextDisplay = findViewById(R.id.predictedTextDisplay)
 
         roomCode = intent.getStringExtra("roomCode") ?: ""
         role = intent.getStringExtra("role") ?: ""
+        val predictedText = intent.getStringExtra("translated_message")
+        if (predictedText != null) {
+            predictedTextDisplay.text = predictedText
+        }
+
         dbRef = FirebaseDatabase.getInstance(
             "https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/"
         ).getReference("rooms/$roomCode")

@@ -1,3 +1,8 @@
+
+
+
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -60,7 +65,17 @@ dependencies {
 
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.google.firebase:firebase-analytics-ktx:22.5.0")
+
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+    implementation("io.socket:socket.io-client:2.1.0") {
+        exclude(group = "org.json", module = "json")
+    }
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.androidx.activity)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -62,7 +62,7 @@ class Sign2TextActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         dbRef = FirebaseDatabase.getInstance(
             "https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/"
         ).getReference("rooms/$roomCode")
-        dbRef.child("message").addValueEventListener(object : ValueEventListener {
+        dbRef.child("voiceMessage").addValueEventListener(object : ValueEventListener {
 
             override fun onDataChange(snapshot: DataSnapshot) {
 
@@ -112,7 +112,7 @@ class Sign2TextActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 translatedText.setText(data.getString("text"))
 
                 // send sign text to chat activity
-                dbRef.child("message").setValue(data.getString("text"))
+                dbRef.child("signMessage").setValue(data.getString("text"))
             }
         }
 

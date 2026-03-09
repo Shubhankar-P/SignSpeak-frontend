@@ -65,11 +65,11 @@ class ChatActivity : AppCompatActivity() {
         }
 
         // 🔹 Listen for new messages
-        dbRef.child("message").addValueEventListener(object : ValueEventListener {
+        dbRef.child("signMessage").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val msg = snapshot.getValue(String::class.java)
                 if (msg != null && msg != "Room created.") {
-                    textOutput.text = msg
+                    predictedTextDisplay.text = msg
                 }
             }
 
@@ -93,7 +93,7 @@ class ChatActivity : AppCompatActivity() {
         })
 
         // 🔹 If sender → enable speech input
-        if (role == "sender") {
+        if (role == "sender" || role == "receiver") {
             textOutput.text = "Room created. Share this code with your friend."
             setupSpeechRecognizer()
 
@@ -181,7 +181,7 @@ class ChatActivity : AppCompatActivity() {
                 if (!matches.isNullOrEmpty()) {
                     val text = matches[0]
                     textOutput.text = text
-                    dbRef.child("message").setValue(text)
+                    dbRef.child("voiceMessage").setValue(text)
                 }
                 btnSpeak.isEnabled = true
             }

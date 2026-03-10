@@ -27,7 +27,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="24dp"
         android:text="Room Code :"
-        android:textColor="@android:color/holo_purple"
+
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -107,17 +107,15 @@
         app:layout_constraintEnd_toEndOf="parent">
 
 
-
-    <TextView
-        android:id="@+id/chatMessageBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="18dp"
-        android:text="🎧 Waiting for voice message..."
-        android:textColor="#000000"
-        android:textSize="18sp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="615dp" />
+        <TextView
+            android:id="@+id/chatMessageBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="18dp"
+            android:background="#F3E5F5"
+            android:text="🎧 Waiting for voice message..."
+            android:textColor="#000000"
+            android:textSize="18sp"/>
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

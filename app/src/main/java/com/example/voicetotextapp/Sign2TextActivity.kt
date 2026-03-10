@@ -47,6 +47,10 @@ class Sign2TextActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign2text)
 
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.customToolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         roomCodeDisplay = findViewById(R.id.roomCodeDisplay)
         cameraPreview = findViewById(R.id.cameraPreview)
         translatedText = findViewById(R.id.translatedText)
@@ -118,6 +122,7 @@ class Sign2TextActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         checkCameraPermission()
     }
+
 
     private fun checkCameraPermission() {
 
@@ -292,6 +297,10 @@ class Sign2TextActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (status == TextToSpeech.SUCCESS) {
             textToSpeech.language = Locale.US
         }
+    }
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     override fun onDestroy() {

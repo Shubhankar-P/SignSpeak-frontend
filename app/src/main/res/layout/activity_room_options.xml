@@ -13,6 +13,20 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Room Code Text -->
+
+    <TextView
+        android:id="@+id/roomHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="16dp"
+        android:text="MODE"
+        android:textColor="@android:color/holo_purple"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/customToolbar" />
+
     <TextView
         android:id="@+id/roomCodeText"
         android:layout_width="wrap_content"

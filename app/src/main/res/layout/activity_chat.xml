@@ -62,19 +62,42 @@
         app:layout_constraintVertical_bias="0.8" />
 
     <TextView
-        android:id="@+id/predictedTextDisplay"
+        android:id="@+id/translationTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="40dp"
+        android:text="Live Sign Language Detection"
+
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@id/textOutput"
+        app:layout_constraintTop_toBottomOf="@id/textOutput" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/predictedCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:background="#F3E5F5"
-        android:padding="16dp"
-        android:text="Predicted text will appear here"
-        android:textColor="#000000"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textOutput" />
+        android:layout_marginTop="8dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="#F3E5F5"
+
+        app:layout_constraintTop_toBottomOf="@id/translationTitle"
+        app:layout_constraintStart_toStartOf="@id/textOutput"
+        app:layout_constraintEnd_toEndOf="@id/textOutput">
+
+        <TextView
+            android:id="@+id/predictedTextDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:text="Predicted text will appear here..."
+            android:textColor="#2D2D2D"
+            android:textSize="18sp"
+            />
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

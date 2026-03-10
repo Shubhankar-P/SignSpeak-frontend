@@ -18,6 +18,13 @@ class RoomOptionsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_room_options)
 
+        // --- Toolbar setup ---
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.customToolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(true) // optional: hide title
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)   // show back arrow
+
+
         roomCodeText = findViewById(R.id.roomCodeText)
         btnSign2Text = findViewById(R.id.btnSign2Text)
         btnVoice2Text = findViewById(R.id.btnVoice2Text)
@@ -50,6 +57,14 @@ class RoomOptionsActivity : AppCompatActivity() {
             intent.putExtra("roomCode", roomCode)
             intent.putExtra("role", "sender")
             startActivity(intent)
+        }
+    } override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {   // Back arrow clicked
+                finish()             // Close RoomOptionsActivity
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }

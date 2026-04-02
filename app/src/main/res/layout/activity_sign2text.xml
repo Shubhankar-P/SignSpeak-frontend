@@ -1,121 +1,273 @@
-<androidx.constraintlayout.widget.ConstraintLayout
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:background="#F5F5F5">
 
-    <!-- Toolbar -->
-    <include
-        android:id="@+id/customToolbar"
-        layout="@layout/custom_toolbar"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Room Code -->
-
-    <!-- Camera Preview -->
-
-    <!-- Translated Text -->
-
-    <TextView
-        android:id="@+id/roomCodeDisplay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:text="Room Code :"
-
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/customToolbar" />
-
-    <androidx.camera.view.PreviewView
-        android:id="@+id/cameraPreview"
-        android:layout_width="355dp"
-        android:layout_height="269dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/roomCodeDisplay" />
-
-    <EditText
-        android:id="@+id/translatedText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Translated text"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/cameraPreview"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <!-- ── Toolbar ─────────────────────────────────────────── -->
+        <include
+            android:id="@+id/customToolbar"
+            layout="@layout/custom_toolbar" />
 
-    <!-- Reset Button -->
-
-    <!-- Speak Button -->
-
-    <!-- Speak Button -->
-
-    <Button
-    android:id="@+id/resetButton"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Reset"
-    android:layout_marginTop="20dp"
-    app:layout_constraintTop_toBottomOf="@id/translatedText"
-    app:layout_constraintEnd_toStartOf="@id/speakButton"
-    android:layout_marginEnd="8dp"/>
-
-
-    <TextView
-        android:id="@+id/voiceMessageLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="124dp"
-        android:text="🟣 Live Voice Message"
-        android:textColor="#6A1B9A"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/translatedText" />
-
-    <Button
-        android:id="@+id/speakButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Speak"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/translatedText"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-
-
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="6dp"
-        app:layout_constraintTop_toBottomOf="@id/voiceMessageLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-
+        <!-- ── Room Code ───────────────────────────────────────── -->
         <TextView
-            android:id="@+id/chatMessageBox"
+            android:id="@+id/roomCodeDisplay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Room Code :"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- ── Camera Preview ──────────────────────────────────── -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/cameraPreview"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:layout_marginTop="8dp" />
+
+        <!-- ── Live Prediction label ───────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="🔴 Live Prediction"
+            android:textColor="#C62828"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <!-- ── Live Prediction box (kept as EditText for compat) ─ -->
+        <EditText
+            android:id="@+id/translatedText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="18dp"
-            android:background="#F3E5F5"
-            android:text="🎧 Waiting for voice message..."
-            android:textColor="#000000"
-            android:textSize="18sp"/>
-    </androidx.cardview.widget.CardView>
+            android:layout_marginTop="4dp"
+            android:hint="Gesture prediction appears here..."
+            android:textSize="20sp"
+            android:inputType="none"
+            android:focusable="false" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- ── Mode Indicator banner ───────────────────────────── -->
+        <TextView
+            android:id="@+id/modeIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="#3949AB"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="📝  SENTENCE FORMATION MODE"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- ════════════════════════════════════════════════════════
+             SENTENCE MODE SECTION  (visible by default)
+        ════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/sentenceSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Words in sentence:"
+                android:textColor="#555555"
+                android:textSize="12sp" />
+
+            <!-- Sentence being built -->
+            <TextView
+                android:id="@+id/sentenceDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="#E8EAF6"
+                android:minHeight="52dp"
+                android:padding="12dp"
+                android:text="(tap 'Next Word' to add current prediction)"
+                android:textColor="#1A237E"
+                android:textSize="16sp" />
+
+            <!-- Word Formation button (full width, teal) -->
+            <Button
+                android:id="@+id/wordFormationButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="#00695C"
+                android:text="📝  Word Formation  (spell a custom word letter by letter)"
+                android:textSize="12sp" />
+
+            <!-- Next Word + Send (side by side) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/nextWordButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#1565C0"
+                    android:text="➕ Next Word" />
+
+                <Button
+                    android:id="@+id/sendButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="#6A1B9A"
+                    android:text="📤 Send" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ════════════════════════════════════════════════════════
+             WORD MODE SECTION  (hidden by default)
+        ════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/wordSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Letters added so far:"
+                android:textColor="#555555"
+                android:textSize="12sp" />
+
+            <!-- Letters being accumulated -->
+            <TextView
+                android:id="@+id/buildingWordDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="#E0F2F1"
+                android:minHeight="52dp"
+                android:padding="12dp"
+                android:text="(sign a letter, then tap 'Next Letter')"
+                android:textColor="#004D40"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <!-- Next Letter + Done (side by side) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/nextLetterButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#00796B"
+                    android:text="🔤 Next Letter" />
+
+                <Button
+                    android:id="@+id/doneButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="#2E7D32"
+                    android:text="✅ Done" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ── AI Corrected Text (appears after Send) ───────────── -->
+        <!-- Small, subtle purple box — non-distracting -->
+        <TextView
+            android:id="@+id/aiCorrectedText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#F3E5F5"
+            android:padding="10dp"
+            android:textColor="#6A1B9A"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <!-- ── Reset All + Speak ────────────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/resetButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="#B71C1C"
+                android:text="🔄 Reset All" />
+
+            <Button
+                android:id="@+id/speakButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔊 Speak" />
+
+        </LinearLayout>
+
+        <!-- ── Incoming Voice Message ───────────────────────────── -->
+        <TextView
+            android:id="@+id/voiceMessageLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="🟣 Live Voice Message"
+            android:textColor="#6A1B9A"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp">
+
+            <TextView
+                android:id="@+id/chatMessageBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#F3E5F5"
+                android:padding="18dp"
+                android:text="🎧 Waiting for voice message..."
+                android:textColor="#000000"
+                android:textSize="18sp" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Bottom breathing room -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+    </LinearLayout>
+</ScrollView>

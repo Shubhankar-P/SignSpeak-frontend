@@ -1,7 +1,16 @@
+import java.util.Properties
+import java.io.FileInputStream
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
 
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
 
-
+fun getLocalProperty(key: String): String {
+    return localProperties.getProperty(key) ?: ""
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -21,6 +30,24 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${getLocalProperty("GEMINI_API_KEY")}\""
+        )
+
+        buildConfigField(
+            "String",
+            "FIREBASE_URL",
+            "\"${getLocalProperty("FIREBASE_URL")}\""
+        )
+
+        buildConfigField(
+            "String",
+            "NGROK_URL",
+            "\"${getLocalProperty("NGROK_URL")}\""
+        )
     }
 
     buildTypes {
@@ -44,6 +71,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -84,4 +112,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

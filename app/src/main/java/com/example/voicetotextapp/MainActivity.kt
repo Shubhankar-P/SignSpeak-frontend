@@ -1,99 +1,106 @@
 package com.example.voicetotextapp
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import android.widget.Button
-import android.widget.EditText
-import com.google.firebase.database.FirebaseDatabase
-import android.widget.Toast
-import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.voicetotextapp.ui.screens.ChatScreen
+import com.example.voicetotextapp.ui.screens.MainScreen
+import com.example.voicetotextapp.ui.screens.RoomOptionsScreen
+import com.example.voicetotextapp.ui.screens.Sign2TextScreen
+import com.example.voicetotextapp.ui.theme.VoiceToTextAppTheme
 
-class MainActivity : AppCompatActivity() {
-
+/**
+ * Single-Activity entry point.
+ *
+ * All navigation that previously used startActivity() / Intent extras is now
+ * handled by the NavController, with route arguments taking the place of
+ * Intent.putExtra() calls.
+ *
+ * Route map:
+ *   "main"                             → MainScreen
+ *   "roomOptions/{roomCode}"           → RoomOptionsScreen
+ *   "chat/{roomCode}/{role}"           → ChatScreen
+ *   "sign2text/{roomCode}"             → Sign2TextScreen
+ */
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val btnCreate = findViewById<Button>(R.id.btnCreate)
-        val btnJoin = findViewById<Button>(R.id.btnJoin)
-
-        btnCreate.setOnClickListener {
-            val roomCode = generateRoomCode()
-            val dbRef = FirebaseDatabase.getInstance( "https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("rooms/$roomCode")
-            dbRef.child("message").setValue("Room created.")
-            val intent = Intent(this, RoomOptionsActivity::class.java)
-            intent.putExtra("roomCode", roomCode)
-            startActivity(intent)
-
-
+        setContent {
+            VoiceToTextAppTheme {
+                SignSpeakNavGraph()
+            }
         }
-
-        btnJoin.setOnClickListener {
-            val input = EditText(this)
-            input.hint = "Enter Room Code"
-
-            val dialog = android.app.AlertDialog.Builder(this)
-                .setTitle("Join Room")
-                .setView(input)
-                .setPositiveButton("Join") { _, _ ->
-                    val roomCode = input.text.toString().trim()
-                    if (roomCode.isEmpty()) {
-                        Toast.makeText(this, "Please enter a room code", Toast.LENGTH_SHORT).show()
-                        return@setPositiveButton
-                    }
-
-                    // Create reference to that room in Firebase
-                    val dbRef = FirebaseDatabase.getInstance(
-                        "https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/"
-                    ).getReference("rooms/$roomCode")
-
-                    //  Check if such a room actually exists
-                    dbRef.get().addOnSuccessListener { snapshot ->
-                        if (snapshot.exists()) {
-
-                            val mode = snapshot.child("mode").getValue(String::class.java)
-
-                            if (mode == "sign") {
-
-                                // Creator chose SIGN → Joiner gets VOICE
-                                val intent = Intent(this, ChatActivity::class.java)
-                                intent.putExtra("roomCode", roomCode)
-                                intent.putExtra("role", "receiver")
-                                startActivity(intent)
-
-                            } else if (mode == "voice") {
-
-                                // Creator chose VOICE → Joiner gets SIGN
-                                val intent = Intent(this, Sign2TextActivity::class.java)
-                                intent.putExtra("roomCode", roomCode)
-                                startActivity(intent)
-
-                            } else {
-
-                                Toast.makeText(this, "Room mode not selected yet", Toast.LENGTH_SHORT).show()
-
-                            }
-
-                        } else {
-                            // ❌ Room doesn’t exist
-                            Toast.makeText(this, "Invalid Room Code", Toast.LENGTH_SHORT).show()
-                        }
-                    }.addOnFailureListener {
-                        Toast.makeText(this, "Error checking room", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .create()
-
-            dialog.show()
-        }
-
     }
+}
 
+@Composable
+fun SignSpeakNavGraph() {
+    val navController = rememberNavController()
 
-    private fun generateRoomCode(): String {
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        return (1..5).map { chars.random() }.joinToString("")
+    NavHost(navController = navController, startDestination = "main") {
+
+        // ── Main / Home ────────────────────────────────────────────────────
+        composable("main") {
+            MainScreen(
+                onRoomCreated = { roomCode ->
+                    navController.navigate("roomOptions/$roomCode")
+                },
+                onJoinAsReceiver = { roomCode ->
+                    navController.navigate("chat/$roomCode/receiver")
+                },
+                onJoinAsSign = { roomCode ->
+                    navController.navigate("sign2text/$roomCode")
+                }
+            )
+        }
+
+        // ── Room Options ───────────────────────────────────────────────────
+        composable(
+            route = "roomOptions/{roomCode}",
+            arguments = listOf(navArgument("roomCode") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomCode = backStackEntry.arguments?.getString("roomCode") ?: ""
+            RoomOptionsScreen(
+                roomCode = roomCode,
+                onNavigateBack = { navController.popBackStack() },
+                onSign2Text = { code -> navController.navigate("sign2text/$code") },
+                onVoice2Text = { code -> navController.navigate("chat/$code/sender") }
+            )
+        }
+
+        // ── Chat (Voice2Text) ──────────────────────────────────────────────
+        composable(
+            route = "chat/{roomCode}/{role}",
+            arguments = listOf(
+                navArgument("roomCode") { type = NavType.StringType },
+                navArgument("role")     { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val roomCode = backStackEntry.arguments?.getString("roomCode") ?: ""
+            val role     = backStackEntry.arguments?.getString("role")     ?: ""
+            ChatScreen(
+                roomCode = roomCode,
+                role = role,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Sign2Text ──────────────────────────────────────────────────────
+        composable(
+            route = "sign2text/{roomCode}",
+            arguments = listOf(navArgument("roomCode") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomCode = backStackEntry.arguments?.getString("roomCode") ?: ""
+            Sign2TextScreen(
+                roomCode = roomCode,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }

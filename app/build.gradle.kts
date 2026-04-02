@@ -74,6 +74,7 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(libs.androidx.activity)
 
 

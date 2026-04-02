@@ -22,13 +22,6 @@
         android:theme="@style/Theme.VoiceToTextApp">
 
         <activity
-            android:name=".Sign2TextActivity"
-            android:exported="false" />
-        <activity
-            android:name=".RoomOptionsActivity"
-            android:exported="false" /> <!-- 👇 Add this line -->
-        <activity android:name=".ChatActivity" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

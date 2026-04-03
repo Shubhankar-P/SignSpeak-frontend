@@ -19,6 +19,11 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,15 +39,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,28 +61,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.signspeak.app.ui.components.AppButton
-import com.signspeak.app.ui.components.AppCard
-import com.signspeak.app.ui.components.AppOutlinedButton
-import com.signspeak.app.ui.components.RoomCodeBadge
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.signspeak.app.ui.components.AppButton
+import com.signspeak.app.ui.components.AppCard
+import com.signspeak.app.ui.components.AppOutlinedButton
+import com.signspeak.app.ui.components.RoomCodeBadge
 import io.socket.client.IO
 import io.socket.client.Socket
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 import java.util.concurrent.Executors
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material3.Icon
+
+// ── Builder mode ───────────────────────────────────────────────────────────
+private enum class BuilderMode { SENTENCE, WORD }
 
 @Composable
 fun Sign2TextScreen(
@@ -82,8 +93,14 @@ fun Sign2TextScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    var translatedText by remember { mutableStateOf("") }
+    // Live gesture prediction from socket (always latest detected gesture)
+    var liveGesture by remember { mutableStateOf("") }
     var chatMessage by remember { mutableStateOf("Waiting for voice message…") }
+
+    // Builder state
+    var builderMode by remember { mutableStateOf(BuilderMode.SENTENCE) }
+    val sentenceWords = remember { mutableStateListOf<String>() }
+    val wordLetters   = remember { mutableStateListOf<String>() }
 
     // ── Firebase ───────────────────────────────────────────────────────────
     val dbRef = remember {
@@ -122,9 +139,8 @@ fun Sign2TextScreen(
         socket.on(Socket.EVENT_CONNECT_ERROR) { Log.e("SOCKET", "Connection error") }
         socket.on("prediction") { args ->
             val data = args[0] as JSONObject
-            val text = data.getString("text")
-            translatedText = text
-            dbRef.child("signMessage").setValue(text)
+            // Only update liveGesture — builder accumulation is always manual (button press)
+            liveGesture = data.getString("text")
         }
         socket.connect()
         onDispose { socket.disconnect(); cameraExecutor.shutdown() }
@@ -143,6 +159,10 @@ fun Sign2TextScreen(
 
     LaunchedEffect(Unit) { if (!cameraGranted) permLauncher.launch(Manifest.permission.CAMERA) }
 
+    // ── Derived strings ────────────────────────────────────────────────────
+    val builtSentence = sentenceWords.joinToString(" ")
+    val builtWord     = wordLetters.joinToString("")
+
     // ── UI ─────────────────────────────────────────────────────────────────
     Scaffold(
         topBar = { SignSpeakTopBar(onNavigateBack = onNavigateBack) },
@@ -154,10 +174,29 @@ fun Sign2TextScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Room code badge
-            RoomCodeBadge(roomCode = roomCode)
+
+            // ── Room code + mode toggle chip ───────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RoomCodeBadge(roomCode = roomCode)
+                ModeChip(
+                    isSentenceMode = builderMode == BuilderMode.SENTENCE,
+                    onToggle = {
+                        if (builderMode == BuilderMode.SENTENCE) {
+                            builderMode = BuilderMode.WORD
+                            wordLetters.clear()
+                        } else {
+                            builderMode = BuilderMode.SENTENCE
+                            wordLetters.clear()
+                        }
+                    }
+                )
+            }
 
             // ── Camera preview ─────────────────────────────────────────────
             if (cameraGranted) {
@@ -195,7 +234,9 @@ fun Sign2TextScreen(
                             }
 
                             provider.unbindAll()
-                            provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, analysis)
+                            provider.bindToLifecycle(
+                                lifecycleOwner, CameraSelector.DEFAULT_FRONT_CAMERA, preview, analysis
+                            )
                         }, ContextCompat.getMainExecutor(ctx))
                         previewView
                     },
@@ -217,57 +258,71 @@ fun Sign2TextScreen(
                 }
             }
 
-            // ── Translated text field ──────────────────────────────────────
+            // ── Live gesture field (read-only) ─────────────────────────────
             OutlinedTextField(
-                value = translatedText,
-                onValueChange = { translatedText = it },
+                value = liveGesture,
+                onValueChange = {},
+                readOnly = true,
                 placeholder = {
                     Text(
-                        "Translated text",
+                        text = if (builderMode == BuilderMode.SENTENCE)
+                            "Detected gesture appears here…"
+                        else
+                            "Detected letter appears here…",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Live Detection",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
                     )
                 },
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedBorderColor      = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor    = MaterialTheme.colorScheme.outline,
                     focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ── Reset + Speak buttons ──────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // ── Builder progress card — only visible when something is built ─
+            AnimatedVisibility(
+                visible = (builderMode == BuilderMode.SENTENCE && sentenceWords.isNotEmpty())
+                        || (builderMode == BuilderMode.WORD && wordLetters.isNotEmpty()),
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit  = fadeOut() + slideOutVertically { it / 2 }
             ) {
-                AppOutlinedButton(
-                    text = "Reset",
-                    onClick = { translatedText = "" },
-                    modifier = Modifier.weight(1f)
-                )
-                AppButton(
-                    onClick = {
-                        tts.speak(translatedText, TextToSpeech.QUEUE_FLUSH, null, null)
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.VolumeUp,
-                        contentDescription = "Speak"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Speak",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        letterSpacing = 0.3.sp
-                    )
-                }
+                BuilderCard(mode = builderMode, builtWord = builtWord, builtSentence = builtSentence)
             }
 
-            // ── Live Voice Message card ────────────────────────────────────
+            // ── Action buttons — layout stays fixed, only labels swap ──────
+            if (builderMode == BuilderMode.SENTENCE) {
+                SentenceActionRow(
+                    canSend    = sentenceWords.isNotEmpty(),
+                    onNextWord = { if (liveGesture.isNotBlank()) sentenceWords.add(liveGesture.trim()) },
+                    onSend     = {
+                        dbRef.child("signMessage").setValue(builtSentence)
+                        sentenceWords.clear()
+                        liveGesture = ""
+                    }
+                )
+            } else {
+                WordActionRow(
+                    canFinish    = wordLetters.isNotEmpty(),
+                    onNextLetter = { if (liveGesture.isNotBlank()) wordLetters.add(liveGesture.trim()) },
+                    onDone       = {
+                        if (wordLetters.isNotEmpty()) sentenceWords.add(builtWord)
+                        wordLetters.clear()
+                        builderMode = BuilderMode.SENTENCE
+                    }
+                )
+            }
+
+            // ── Live voice message card ────────────────────────────────────
             AppCard {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -285,6 +340,18 @@ fun Sign2TextScreen(
                             color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 1.sp
                         )
+                        Spacer(modifier = Modifier.weight(1f))
+                        TextButton(
+                            onClick = { tts.speak(chatMessage, TextToSpeech.QUEUE_FLUSH, null, null) },
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VolumeUp,
+                                contentDescription = "Speak",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.height(18.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
@@ -296,6 +363,110 @@ fun Sign2TextScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+// ── Sub-composables ────────────────────────────────────────────────────────
+
+/**
+ * Small text button in the top-right corner that toggles mode.
+ * Shows "Word Builder" in sentence mode, "✕ Cancel Word" in word mode.
+ */
+@Composable
+private fun ModeChip(isSentenceMode: Boolean, onToggle: () -> Unit) {
+    TextButton(onClick = onToggle) {
+        Text(
+            text = if (isSentenceMode) "Word Builder" else "✕  Cancel",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isSentenceMode)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.error
+        )
+    }
+}
+
+/**
+ * Card showing accumulated letters (word mode) or words (sentence mode).
+ * Only rendered when there's something to show (parent AnimatedVisibility handles that).
+ */
+@Composable
+private fun BuilderCard(mode: BuilderMode, builtWord: String, builtSentence: String) {
+    AppCard {
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            Text(
+                text = if (mode == BuilderMode.WORD) "BUILDING WORD" else "BUILDING SENTENCE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = if (mode == BuilderMode.WORD) builtWord else builtSentence,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                // Monospace in word mode makes individual letters easier to read
+                fontFamily = if (mode == BuilderMode.WORD) FontFamily.Monospace else FontFamily.Default,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/**
+ * Action row for sentence mode.
+ */
+@Composable
+private fun SentenceActionRow(
+    canSend: Boolean,
+    onNextWord: () -> Unit,
+    onSend: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        AppOutlinedButton(
+            text = "Next Word",
+            onClick = onNextWord,
+            modifier = Modifier.weight(1f)
+        )
+        AppButton(
+            onClick = onSend,
+            enabled = canSend,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Send", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+        }
+    }
+}
+
+/**
+ * Action row for word mode.
+ */
+@Composable
+private fun WordActionRow(
+    canFinish: Boolean,
+    onNextLetter: () -> Unit,
+    onDone: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        AppOutlinedButton(
+            text = "Next Letter",
+            onClick = onNextLetter,
+            modifier = Modifier.weight(1f)
+        )
+        AppButton(
+            onClick = onDone,
+            enabled = canFinish,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Done", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.voicetotextapp.ui.theme
+package com.signspeak.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

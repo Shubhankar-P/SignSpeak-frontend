@@ -1,4 +1,4 @@
-package com.example.voicetotextapp.ui.screens
+package com.signspeak.app.ui.screens
 
 import android.app.AlertDialog
 import android.content.Context
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,13 +28,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.voicetotextapp.R
-import com.example.voicetotextapp.ui.components.AppButton
-import com.example.voicetotextapp.ui.components.AppOutlinedButton
+import com.signspeak.app.R
+import com.signspeak.app.ui.components.AppButton
+import com.signspeak.app.ui.components.AppOutlinedButton
 import com.google.firebase.database.FirebaseDatabase
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddBox
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Login

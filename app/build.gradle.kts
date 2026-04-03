@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.voicetotextapp"
+    namespace = "com.signspeak.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.voicetotextapp"
+        applicationId = "com.signspeak.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

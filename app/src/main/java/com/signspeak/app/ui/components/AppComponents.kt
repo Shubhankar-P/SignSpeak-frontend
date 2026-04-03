@@ -1,5 +1,6 @@
-package com.example.voicetotextapp.ui.components
+package com.signspeak.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,8 +28,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
-
-import com.example.voicetotextapp.ui.theme.VioletGlow
 
 /**
  * Primary full-width pill button used across all screens.
@@ -75,7 +73,7 @@ fun AppOutlinedButton(
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,
         ),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.5.dp, MaterialTheme.colorScheme.primary
         ),
         modifier = modifier

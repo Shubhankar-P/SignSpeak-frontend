@@ -1,9 +1,10 @@
-package com.example.voicetotextapp.ui.screens
+package com.signspeak.app.ui.screens
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,17 +43,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.voicetotextapp.ui.components.AppButton
-import com.example.voicetotextapp.ui.components.AppCard
-import com.example.voicetotextapp.ui.components.RoomCodeBadge
+import com.signspeak.app.ui.components.AppButton
+import com.signspeak.app.ui.components.AppCard
+import com.signspeak.app.ui.components.RoomCodeBadge
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -61,7 +58,6 @@ import com.google.firebase.database.ValueEventListener
 import java.util.Locale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 
@@ -106,13 +102,13 @@ fun ChatScreen(
         }
 
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(p: android.os.Bundle?) { outputText = "Ready…" }
+            override fun onReadyForSpeech(p: Bundle?) { outputText = "Ready…" }
             override fun onBeginningOfSpeech() { outputText = "Listening…"; isListening = true }
             override fun onRmsChanged(r: Float) {}
             override fun onBufferReceived(b: ByteArray?) {}
             override fun onEndOfSpeech() { outputText = "Processing…"; isListening = false }
             override fun onError(e: Int) { outputText = "Couldn't catch that. Try again."; speakEnabled = true; isListening = false }
-            override fun onResults(results: android.os.Bundle?) {
+            override fun onResults(results: Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
                     outputText = matches[0]
@@ -121,8 +117,8 @@ fun ChatScreen(
                 speakEnabled = true
                 isListening = false
             }
-            override fun onPartialResults(p: android.os.Bundle?) {}
-            override fun onEvent(t: Int, p: android.os.Bundle?) {}
+            override fun onPartialResults(p: Bundle?) {}
+            override fun onEvent(t: Int, p: Bundle?) {}
         })
 
         onDispose { speechRecognizer.destroy() }

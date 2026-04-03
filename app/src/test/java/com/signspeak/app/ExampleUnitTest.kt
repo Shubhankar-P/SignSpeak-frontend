@@ -1,4 +1,4 @@
-package com.example.voicetotextapp
+package com.signspeak.app
 
 import org.junit.Test
 

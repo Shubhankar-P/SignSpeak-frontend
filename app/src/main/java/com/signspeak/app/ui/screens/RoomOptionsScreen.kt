@@ -1,4 +1,4 @@
-package com.example.voicetotextapp.ui.screens
+package com.signspeak.app.ui.screens
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,10 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.voicetotextapp.ui.components.RoomCodeBadge
+import com.signspeak.app.ui.components.RoomCodeBadge
 import com.google.firebase.database.FirebaseDatabase
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Icon

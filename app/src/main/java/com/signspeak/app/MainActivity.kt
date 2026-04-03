@@ -1,4 +1,4 @@
-package com.example.voicetotextapp
+package com.signspeak.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,11 +9,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.voicetotextapp.ui.screens.ChatScreen
-import com.example.voicetotextapp.ui.screens.MainScreen
-import com.example.voicetotextapp.ui.screens.RoomOptionsScreen
-import com.example.voicetotextapp.ui.screens.Sign2TextScreen
-import com.example.voicetotextapp.ui.theme.VoiceToTextAppTheme
+import com.signspeak.app.ui.screens.ChatScreen
+import com.signspeak.app.ui.screens.MainScreen
+import com.signspeak.app.ui.screens.RoomOptionsScreen
+import com.signspeak.app.ui.screens.Sign2TextScreen
+import com.signspeak.app.ui.theme.VoiceToTextAppTheme
 
 /**
  * Single-Activity entry point.

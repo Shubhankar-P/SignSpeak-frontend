@@ -1,4 +1,4 @@
-package com.example.voicetotextapp.ui.screens
+package com.signspeak.app.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -49,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -57,10 +56,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.example.voicetotextapp.ui.components.AppButton
-import com.example.voicetotextapp.ui.components.AppCard
-import com.example.voicetotextapp.ui.components.AppOutlinedButton
-import com.example.voicetotextapp.ui.components.RoomCodeBadge
+import com.signspeak.app.ui.components.AppButton
+import com.signspeak.app.ui.components.AppCard
+import com.signspeak.app.ui.components.AppOutlinedButton
+import com.signspeak.app.ui.components.RoomCodeBadge
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase

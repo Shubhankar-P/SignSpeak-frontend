@@ -1,4 +1,4 @@
-package com.example.voicetotextapp.ui.screens
+package com.signspeak.app.ui.screens
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons

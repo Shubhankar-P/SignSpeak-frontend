@@ -81,6 +81,9 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 import java.util.concurrent.Executors
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.size
 
 // ── Builder mode ───────────────────────────────────────────────────────────
 private enum class BuilderMode { SENTENCE, WORD }
@@ -296,7 +299,18 @@ fun Sign2TextScreen(
                 enter = fadeIn() + slideInVertically { it / 2 },
                 exit  = fadeOut() + slideOutVertically { it / 2 }
             ) {
-                BuilderCard(mode = builderMode, builtWord = builtWord, builtSentence = builtSentence)
+                BuilderCard(
+                    mode = builderMode,
+                    builtWord = builtWord,
+                    builtSentence = builtSentence,
+                    onBackspace = {
+                        if (builderMode == BuilderMode.WORD) {
+                            if (wordLetters.isNotEmpty()) wordLetters.removeAt(wordLetters.lastIndex)
+                        } else {
+                            if (sentenceWords.isNotEmpty()) sentenceWords.removeAt(sentenceWords.lastIndex)
+                        }
+                    }
+                )
             }
 
             // ── Action buttons — layout stays fixed, only labels swap ──────
@@ -393,21 +407,42 @@ private fun ModeChip(isSentenceMode: Boolean, onToggle: () -> Unit) {
  * Only rendered when there's something to show (parent AnimatedVisibility handles that).
  */
 @Composable
-private fun BuilderCard(mode: BuilderMode, builtWord: String, builtSentence: String) {
+private fun BuilderCard(
+    mode: BuilderMode,
+    builtWord: String,
+    builtSentence: String,
+    onBackspace: () -> Unit,
+) {
     AppCard {
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-            Text(
-                text = if (mode == BuilderMode.WORD) "BUILDING WORD" else "BUILDING SENTENCE",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (mode == BuilderMode.WORD) "BUILDING WORD" else "BUILDING SENTENCE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp
+                )
+                IconButton(
+                    onClick = onBackspace,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Backspace,
+                        contentDescription = "Delete last",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = if (mode == BuilderMode.WORD) builtWord else builtSentence,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                // Monospace in word mode makes individual letters easier to read
                 fontFamily = if (mode == BuilderMode.WORD) FontFamily.Monospace else FontFamily.Default,
                 modifier = Modifier.fillMaxWidth()
             )

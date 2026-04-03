@@ -5,36 +5,41 @@ import android.content.Context
 import android.widget.EditText
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.voicetotextapp.R
+import com.example.voicetotextapp.ui.components.AppButton
+import com.example.voicetotextapp.ui.components.AppOutlinedButton
 import com.google.firebase.database.FirebaseDatabase
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AddBox
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Login
 
-/**
- * Replaces: activity_main.xml + MainActivity
- *
- * Navigation callbacks are passed in so this composable stays side-effect free
- * and easy to preview/test.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onRoomCreated: (roomCode: String) -> Unit,
@@ -42,84 +47,111 @@ fun MainScreen(
     onJoinAsSign: (roomCode: String) -> Unit,
 ) {
     val context = LocalContext.current
+    val background = MaterialTheme.colorScheme.background
 
     Scaffold(
-        topBar = { SignSpeakTopBar() }
+        topBar = { SignSpeakTopBar() },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ASL image — replaces ImageView (height 400dp)
-            Image(
-                painter = painterResource(id = R.drawable.asl),
-                contentDescription = "ASL illustration",
+            // ── Hero image with gradient fade at the bottom ────────────────
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp),
-                contentScale = ContentScale.Fit
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Create Room button
-            Button(
-                onClick = {
-                    val roomCode = generateRoomCode()
-                    val dbRef = FirebaseDatabase
-                        .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
-                        .getReference("rooms/$roomCode")
-                    dbRef.child("message").setValue("Room created.")
-                    onRoomCreated(roomCode)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                    .weight(1f)   // takes available space, pushes buttons to bottom
             ) {
-                Text("Create Room")
+                Image(
+                    painter = painterResource(id = R.drawable.asl),
+                    contentDescription = "ASL illustration",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                // Gradient overlay so the image fades into the background colour
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    background.copy(alpha = 0.6f),
+                                    background
+                                ),
+                                startY = 200f
+                            )
+                        )
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Join Room button — shows the same AlertDialog as before
-            Button(
-                onClick = { showJoinRoomDialog(context, onJoinAsReceiver, onJoinAsSign) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+            // ── Bottom sheet-style action area ────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Join Room")
+//                Text(
+//                    text = "Bridge any conversation",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                AppButton(
+                    onClick = {
+                        val roomCode = generateRoomCode()
+                        FirebaseDatabase
+                            .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                            .getReference("rooms/$roomCode")
+                            .child("message").setValue("Room created.")
+                        onRoomCreated(roomCode)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AddBox,
+                        contentDescription = "Create Room"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "Create Room",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        letterSpacing = 0.3.sp
+                    )
+                }
+
+                AppOutlinedButton(
+                    text = "Join Room",
+                    onClick = { showJoinRoomDialog(context, onJoinAsReceiver, onJoinAsSign) },
+                    icon = Icons.Default.Login
+                )
             }
         }
     }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers (unchanged logic from MainActivity.kt)
-// ---------------------------------------------------------------------------
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 private fun generateRoomCode(): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     return (1..5).map { chars.random() }.joinToString("")
 }
 
-/**
- * Shows the join-room dialog.
- * Uses the classic AlertDialog because Compose AlertDialog doesn't support
- * an arbitrary View as content (needed for the plain EditText here).
- * You can replace this with a Compose Dialog + OutlinedTextField if preferred.
- */
 private fun showJoinRoomDialog(
     context: Context,
     onJoinAsReceiver: (String) -> Unit,
     onJoinAsSign: (String) -> Unit,
 ) {
     val input = EditText(context).apply { hint = "Enter Room Code" }
-
     AlertDialog.Builder(context)
         .setTitle("Join Room")
         .setView(input)
@@ -129,11 +161,9 @@ private fun showJoinRoomDialog(
                 Toast.makeText(context, "Please enter a room code", Toast.LENGTH_SHORT).show()
                 return@setPositiveButton
             }
-
             val dbRef = FirebaseDatabase
                 .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
                 .getReference("rooms/$roomCode")
-
             dbRef.get()
                 .addOnSuccessListener { snapshot ->
                     if (snapshot.exists()) {

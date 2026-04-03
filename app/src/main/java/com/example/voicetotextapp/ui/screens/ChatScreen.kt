@@ -1,7 +1,6 @@
 package com.example.voicetotextapp.ui.screens
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -11,22 +10,25 @@ import android.speech.SpeechRecognizer
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,29 +42,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.voicetotextapp.ui.theme.PurpleLight
-import com.example.voicetotextapp.ui.theme.PurplePrimary
+import com.example.voicetotextapp.ui.components.AppButton
+import com.example.voicetotextapp.ui.components.AppCard
+import com.example.voicetotextapp.ui.components.RoomCodeBadge
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.util.Locale
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 
-/**
- * Replaces: activity_chat.xml + ChatActivity
- *
- * @param roomCode          Room identifier.
- * @param role              "sender" | "receiver" — drives UI visibility.
- * @param initialPredicted  Optional pre-translated message from the previous screen.
- * @param onNavigateBack    Called when the user confirms leaving the room.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     roomCode: String,
@@ -72,17 +74,16 @@ fun ChatScreen(
 ) {
     val context = LocalContext.current
 
-    // ── State ──────────────────────────────────────────────────────────────
     var outputText by remember {
         mutableStateOf(
-            when {
-                role == "sender" || role == "receiver" -> "Room created. Share this code with your friend."
-                else -> "Waiting for message..."
-            }
+            if (role == "sender" || role == "receiver")
+                "Room created. Share this code with your friend."
+            else "Waiting for message..."
         )
     }
-    var predictedText by remember { mutableStateOf(initialPredicted ?: "Predicted text will appear here...") }
+    var predictedText by remember { mutableStateOf(initialPredicted ?: "Predicted sign language text will appear here…") }
     var speakEnabled by remember { mutableStateOf(true) }
+    var isListening by remember { mutableStateOf(false) }
     var showLeaveDialog by remember { mutableStateOf(false) }
 
     val dbRef = remember {
@@ -96,85 +97,82 @@ fun ChatScreen(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* permission result handled silently */ }
+    ) {}
 
     DisposableEffect(Unit) {
-        // Notify the room that a receiver joined
         if (role == "receiver") {
-            val deviceName = Build.MODEL ?: "Unknown Device"
-            dbRef.child("joined").setValue(deviceName)
+            dbRef.child("joined").setValue(Build.MODEL ?: "Unknown Device")
             Toast.makeText(context, "Connected to room successfully", Toast.LENGTH_SHORT).show()
         }
 
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: android.os.Bundle?) { outputText = "Ready to listen..." }
-            override fun onBeginningOfSpeech() { outputText = "Listening..." }
-            override fun onRmsChanged(rmsdB: Float) {}
-            override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() { outputText = "Processing..." }
-            override fun onError(error: Int) {
-                outputText = "Error. Try again!"
-                speakEnabled = true
-            }
+            override fun onReadyForSpeech(p: android.os.Bundle?) { outputText = "Ready…" }
+            override fun onBeginningOfSpeech() { outputText = "Listening…"; isListening = true }
+            override fun onRmsChanged(r: Float) {}
+            override fun onBufferReceived(b: ByteArray?) {}
+            override fun onEndOfSpeech() { outputText = "Processing…"; isListening = false }
+            override fun onError(e: Int) { outputText = "Couldn't catch that. Try again."; speakEnabled = true; isListening = false }
             override fun onResults(results: android.os.Bundle?) {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
-                    val text = matches[0]
-                    outputText = text
-                    dbRef.child("voiceMessage").setValue(text)
+                    outputText = matches[0]
+                    dbRef.child("voiceMessage").setValue(matches[0])
                 }
                 speakEnabled = true
+                isListening = false
             }
-            override fun onPartialResults(partial: android.os.Bundle?) {}
-            override fun onEvent(type: Int, params: android.os.Bundle?) {}
+            override fun onPartialResults(p: android.os.Bundle?) {}
+            override fun onEvent(t: Int, p: android.os.Bundle?) {}
         })
 
         onDispose { speechRecognizer.destroy() }
     }
 
-    // ── Firebase listeners ─────────────────────────────────────────────────
     LaunchedEffect(roomCode) {
-        // Sign-message listener
         dbRef.child("signMessage").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val msg = snapshot.getValue(String::class.java)
                 if (msg != null && msg != "Room created.") predictedText = msg
             }
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(e: DatabaseError) {}
         })
-
-        // Joined listener (notify sender)
         dbRef.child("joined").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val deviceName = snapshot.getValue(String::class.java)
-                if (deviceName != null && role == "sender") {
-                    Toast.makeText(context, "$deviceName has joined the room", Toast.LENGTH_SHORT).show()
-                }
+                val name = snapshot.getValue(String::class.java)
+                if (name != null && role == "sender")
+                    Toast.makeText(context, "$name has joined the room", Toast.LENGTH_SHORT).show()
             }
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(e: DatabaseError) {}
         })
     }
 
-    // ── Leave Room dialog ──────────────────────────────────────────────────
+    // ── Pulse animation for the mic button ────────────────────────────────
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue  = 1.06f,
+        animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse),
+        label = "pulseScale"
+    )
+
+    // ── Leave dialog ───────────────────────────────────────────────────────
     if (showLeaveDialog) {
         AlertDialog(
             onDismissRequest = { showLeaveDialog = false },
             title = { Text("Leave Room?") },
-            text = { Text("Leaving will delete this room for everyone. Do you want to continue?") },
+            text  = { Text("Leaving will delete this room for everyone.") },
             confirmButton = {
                 TextButton(onClick = {
                     FirebaseDatabase
                         .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
-                        .getReference("rooms")
-                        .child(roomCode)
-                        .removeValue()
+                        .getReference("rooms").child(roomCode).removeValue()
                     Toast.makeText(context, "Room deleted", Toast.LENGTH_SHORT).show()
                     showLeaveDialog = false
                     onNavigateBack()
-                }) { Text("Yes") }
+                }) { Text("Leave", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showLeaveDialog = false }) { Text("No") }
+                TextButton(onClick = { showLeaveDialog = false }) { Text("Stay") }
             }
         )
     }
@@ -185,85 +183,78 @@ fun ChatScreen(
             SignSpeakTopBar(onNavigateBack = {
                 if (role == "sender") showLeaveDialog = true else onNavigateBack()
             })
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            // Room code badge
+            RoomCodeBadge(roomCode = roomCode, modifier = Modifier.align(Alignment.Start))
 
-            // Room Code label
-            Text(
-                text = "Room Code:",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+            // ── Output / status card ───────────────────────────────────────
+            val borderColor by animateColorAsState(
+                targetValue = if (isListening)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.outline,
+                animationSpec = tween(400),
+                label = "borderColor"
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = roomCode,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Output text block — purple background (holo_purple ≈ #FF9800 is orange;
-            // the XML used @android:color/holo_purple which is #FF9000 on older APIs but
-            // the app's theme uses purple, so we match the design intent here).
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PurplePrimary, shape = RoundedCornerShape(4.dp))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = outputText,
-                    fontSize = 20.sp,
-                    color = Color.White,
-                    modifier = Modifier.fillMaxWidth()
+            AppCard(
+                modifier = Modifier.border(
+                    width = 1.5.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(16.dp)
                 )
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Voice Output",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = outputText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // "Live Sign Language Detection" section
-            Text(
-                text = "Live Sign Language Detection",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(containerColor = PurpleLight)
-            ) {
-                Text(
-                    text = predictedText,
-                    color = Color(0xFF2D2D2D),
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(20.dp)
-                )
+            // ── Sign language prediction card ──────────────────────────────
+            AppCard {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "LIVE SIGN DETECTION",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = predictedText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Speak Now button — hidden for pure-receiver role with no speak capability
+            // ── Speak button ───────────────────────────────────────────────
             if (role == "sender" || role == "receiver") {
-                Button(
+                AppButton(
                     onClick = {
                         val hasPermission = ContextCompat.checkSelfPermission(
                             context, Manifest.permission.RECORD_AUDIO
@@ -271,24 +262,40 @@ fun ChatScreen(
 
                         if (!hasPermission) {
                             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            return@Button
+                            return@AppButton
                         }
 
-                        outputText = "Speak now..."
+                        outputText = "Speak now…"
                         speakEnabled = false
-                        val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+
+                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
                         }
-                        speechRecognizer.startListening(speechIntent)
+
+                        speechRecognizer.startListening(intent)
                     },
                     enabled = speakEnabled,
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (isListening) Modifier.scale(pulseScale) else Modifier)
                 ) {
-                    Text("🎙️ Speak Now")
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Speak"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = if (isListening) "Listening…" else "Speak Now",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        letterSpacing = 0.3.sp
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

@@ -7,30 +7,40 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val LightColorScheme = lightColorScheme(
-    primary = PurplePrimary,
-    onPrimary = Color.White,
-    primaryContainer = PurpleLight,
-    onPrimaryContainer = PurpleDark,
-    secondary = Teal200,
-    onSecondary = Color.Black,
-    background = Color.White,
-    onBackground = TextDark,
-    surface = Color.White,
-    onSurface = TextDark,
+private val DarkColorScheme = darkColorScheme(
+    primary            = Violet500,
+    onPrimary          = Color.White,
+    primaryContainer   = Violet600,
+    onPrimaryContainer = Color.White,
+    secondary          = Violet400,
+    onSecondary        = Color.White,
+    background         = Dark900,
+    onBackground       = TextPrimary,
+    surface            = Dark800,
+    onSurface          = TextPrimary,
+    surfaceVariant     = Dark700,
+    onSurfaceVariant   = TextSecondary,
+    outline            = Dark600,
+    error              = Error,
+    onError            = Color.White,
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple200,
-    onPrimary = Color.Black,
-    primaryContainer = PurpleDark,
-    onPrimaryContainer = Color.White,
-    secondary = Teal200,
-    onSecondary = Color.Black,
-    background = Color(0xFF121212),
-    onBackground = Color.White,
-    surface = Color(0xFF1E1E1E),
-    onSurface = Color.White,
+private val LightColorScheme = lightColorScheme(
+    primary            = Violet500,
+    onPrimary          = Color.White,
+    primaryContainer   = Light200,
+    onPrimaryContainer = Violet600,
+    secondary          = Violet400,
+    onSecondary        = Color.White,
+    background         = Light50,
+    onBackground       = TextOnLight,
+    surface            = Color.White,
+    onSurface          = TextOnLight,
+    surfaceVariant     = Light100,
+    onSurfaceVariant   = TextSecOnLight,
+    outline            = Light200,
+    error              = Error,
+    onError            = Color.White,
 )
 
 @Composable
@@ -42,7 +52,7 @@ fun VoiceToTextAppTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+        typography  = Typography,
+        content     = content
     )
 }

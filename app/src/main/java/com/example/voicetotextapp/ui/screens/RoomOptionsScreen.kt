@@ -1,43 +1,37 @@
 package com.example.voicetotextapp.ui.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.voicetotextapp.ui.theme.PurplePrimary
+import com.example.voicetotextapp.ui.components.RoomCodeBadge
 import com.google.firebase.database.FirebaseDatabase
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.PanTool
 
-/**
- * Replaces: activity_room_options.xml + RoomOptionsActivity
- *
- * @param roomCode          The room code passed from the previous screen.
- * @param onNavigateBack    Called when the back arrow is tapped (replaces finish()).
- * @param onSign2Text       Navigate to Sign2TextActivity equivalent.
- * @param onVoice2Text      Navigate to ChatActivity as sender.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomOptionsScreen(
     roomCode: String,
@@ -46,75 +40,118 @@ fun RoomOptionsScreen(
     onVoice2Text: (roomCode: String) -> Unit,
 ) {
     Scaffold(
-        topBar = { SignSpeakTopBar(onNavigateBack = onNavigateBack) }
+        topBar = { SignSpeakTopBar(onNavigateBack = onNavigateBack) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            // Large top spacer mirrors the 180dp margin from the original XML
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Room Code label — visibility was "gone" in XML but shown here once available
+            // Room code badge
             if (roomCode.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(40.dp))
+                RoomCodeBadge(roomCode = roomCode)
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Heading
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Room Code: $roomCode",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PurplePrimary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    text = "Choose your mode",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "How will you communicate in this room?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // The original XML had 180dp top margin on btnSign2Text measured from roomCodeText.
-            // Replicate the visual gap with a Spacer.
-            Spacer(modifier = Modifier.height(180.dp))
-
-            // SIGN2TEXT button
-            Button(
+// SIGN2TEXT card
+            ModeCard(
+                icon = Icons.Default.PanTool,
+                title = "Sign to Text",
+                description = "Use your camera to translate sign language into text in real time",
                 onClick = {
                     FirebaseDatabase
                         .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
                         .getReference("rooms/$roomCode")
                         .child("mode").setValue("sign")
                     onSign2Text(roomCode)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary)
-            ) {
-                Text(
-                    text = "SIGN2TEXT",
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
-            }
+                }
+            )
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // VOICE2TEXT button
-            Button(
+// VOICE2TEXT card
+            ModeCard(
+                icon = Icons.Default.RecordVoiceOver,
+                title = "Voice to Text",
+                description = "Speak and your words are transcribed and shared with the room",
                 onClick = {
                     FirebaseDatabase
                         .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
                         .getReference("rooms/$roomCode")
                         .child("mode").setValue("voice")
                     onVoice2Text(roomCode)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary)
-            ) {
+                }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun ModeCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(20.dp)
+            ),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "VOICE2TEXT",
-                    fontSize = 18.sp,
-                    color = Color.White
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

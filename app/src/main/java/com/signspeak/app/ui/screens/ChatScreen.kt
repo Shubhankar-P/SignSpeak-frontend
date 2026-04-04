@@ -60,6 +60,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import com.signspeak.app.BuildConfig
 
 @Composable
 fun ChatScreen(
@@ -84,7 +85,7 @@ fun ChatScreen(
 
     val dbRef = remember {
         FirebaseDatabase
-            .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+            .getInstance(BuildConfig.FIREBASE_URL)
             .getReference("rooms/$roomCode")
     }
 
@@ -160,7 +161,7 @@ fun ChatScreen(
             confirmButton = {
                 TextButton(onClick = {
                     FirebaseDatabase
-                        .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                        .getInstance(BuildConfig.FIREBASE_URL)
                         .getReference("rooms").child(roomCode).removeValue()
                     Toast.makeText(context, "Room deleted", Toast.LENGTH_SHORT).show()
                     showLeaveDialog = false

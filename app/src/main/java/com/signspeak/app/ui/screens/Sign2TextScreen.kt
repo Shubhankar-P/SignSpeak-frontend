@@ -25,6 +25,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,19 +36,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +63,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -77,30 +87,42 @@ import com.signspeak.app.ui.components.AppOutlinedButton
 import com.signspeak.app.ui.components.RoomCodeBadge
 import io.socket.client.IO
 import io.socket.client.Socket
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 import java.util.concurrent.Executors
-import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.material3.IconButton
-import androidx.compose.foundation.layout.size
+import com.signspeak.app.BuildConfig
 
 // ── Builder mode ───────────────────────────────────────────────────────────
 private enum class BuilderMode { SENTENCE, WORD }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sign2TextScreen(
     roomCode: String,
     onNavigateBack: () -> Unit,
 ) {
+    var showSuggestionSheet by remember { mutableStateOf(false) }
+    var originalSentence by remember { mutableStateOf("") }
+    var suggestedSentence by remember { mutableStateOf("") }
+    var isLoadingGemini by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val gemini = remember {
+        GenerativeModel(
+            modelName = "gemini-2.5-flash-lite",
+            apiKey = BuildConfig.GEMINI_API_KEY
+        )
+    }
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Live gesture prediction from socket (always latest detected gesture)
     var liveGesture by remember { mutableStateOf("") }
     var chatMessage by remember { mutableStateOf("Waiting for voice message…") }
 
-    // Builder state
     var builderMode by remember { mutableStateOf(BuilderMode.SENTENCE) }
     val sentenceWords = remember { mutableStateListOf<String>() }
     val wordLetters   = remember { mutableStateListOf<String>() }
@@ -108,7 +130,7 @@ fun Sign2TextScreen(
     // ── Firebase ───────────────────────────────────────────────────────────
     val dbRef = remember {
         FirebaseDatabase
-            .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+            .getInstance(BuildConfig.FIREBASE_URL)
             .getReference("rooms/$roomCode")
     }
 
@@ -134,7 +156,7 @@ fun Sign2TextScreen(
     var lastSentTime by remember { mutableStateOf(0L) }
 
     val socket: Socket = remember {
-        IO.socket("https://archimedes-pragmatic-maliah.ngrok-free.dev")
+        IO.socket(BuildConfig.NGROK_URL)
     }
 
     DisposableEffect(Unit) {
@@ -142,7 +164,6 @@ fun Sign2TextScreen(
         socket.on(Socket.EVENT_CONNECT_ERROR) { Log.e("SOCKET", "Connection error") }
         socket.on("prediction") { args ->
             val data = args[0] as JSONObject
-            // Only update liveGesture — builder accumulation is always manual (button press)
             liveGesture = data.getString("text")
         }
         socket.connect()
@@ -162,7 +183,6 @@ fun Sign2TextScreen(
 
     LaunchedEffect(Unit) { if (!cameraGranted) permLauncher.launch(Manifest.permission.CAMERA) }
 
-    // ── Derived strings ────────────────────────────────────────────────────
     val builtSentence = sentenceWords.joinToString(" ")
     val builtWord     = wordLetters.joinToString("")
 
@@ -292,7 +312,7 @@ fun Sign2TextScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ── Builder progress card — only visible when something is built ─
+            // ── Builder progress card ──────────────────────────────────────
             AnimatedVisibility(
                 visible = (builderMode == BuilderMode.SENTENCE && sentenceWords.isNotEmpty())
                         || (builderMode == BuilderMode.WORD && wordLetters.isNotEmpty()),
@@ -313,15 +333,42 @@ fun Sign2TextScreen(
                 )
             }
 
-            // ── Action buttons — layout stays fixed, only labels swap ──────
+            // ── Action buttons ─────────────────────────────────────────────
             if (builderMode == BuilderMode.SENTENCE) {
                 SentenceActionRow(
-                    canSend    = sentenceWords.isNotEmpty(),
-                    onNextWord = { if (liveGesture.isNotBlank()) sentenceWords.add(liveGesture.trim()) },
-                    onSend     = {
-                        dbRef.child("signMessage").setValue(builtSentence)
+                    canSend         = sentenceWords.isNotEmpty(),
+                    isLoadingGemini = isLoadingGemini,
+                    onNextWord      = { if (liveGesture.isNotBlank()) sentenceWords.add(liveGesture.trim()) },
+                    onSend          = {
+                        val sentence = builtSentence
                         sentenceWords.clear()
                         liveGesture = ""
+                        originalSentence = sentence
+                        isLoadingGemini = true
+
+                        coroutineScope.launch {
+                            try {
+                                val prompt = "You are a grammar assistant for a sign language app. " +
+                                        "Fix grammar and word order only if needed. " +
+                                        "Keep the original meaning strictly intact. " +
+                                        "Return ONLY the corrected sentence, nothing else. " +
+                                        "If the sentence is already correct, return it exactly as-is.\n\n" +
+                                        "Sentence: \"$sentence\""
+                                val result = gemini.generateContent(prompt)
+                                val suggestion = result.text?.trim() ?: sentence
+
+                                if (suggestion.equals(sentence, ignoreCase = true)) {
+                                    dbRef.child("signMessage").setValue(sentence)
+                                } else {
+                                    suggestedSentence = suggestion
+                                    showSuggestionSheet = true
+                                }
+                            } catch (e: Exception) {
+                                dbRef.child("signMessage").setValue(sentence)
+                            } finally {
+                                isLoadingGemini = false
+                            }
+                        }
                     }
                 )
             } else {
@@ -377,16 +424,115 @@ fun Sign2TextScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Temporary test button — delete after confirming
+            TextButton(onClick = {
+                coroutineScope.launch {
+                    try {
+                        val result = gemini.generateContent("Say exactly: API_WORKING")
+                        Log.d("GEMINI_TEST", "Response: ${result.text}")
+                    } catch (e: Exception) {
+                        Log.e("GEMINI_TEST", "Error: ${e.message}")
+                    }
+                }
+            }) { Text("Test Gemini") }
+        }
+
+        // ── Gemini suggestion bottom sheet — placed inside Scaffold block ──
+        if (showSuggestionSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showSuggestionSheet = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Suggested Improvement",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    AppCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "ORIGINAL",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = originalSentence,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    AppCard(
+                        modifier = Modifier.border(
+                            1.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            RoundedCornerShape(16.dp)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "IMPROVED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                letterSpacing = 1.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = suggestedSentence,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AppOutlinedButton(
+                            text = "Send Original",
+                            onClick = {
+                                dbRef.child("signMessage").setValue(originalSentence)
+                                showSuggestionSheet = false
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        AppButton(
+                            onClick = {
+                                dbRef.child("signMessage").setValue(suggestedSentence)
+                                showSuggestionSheet = false
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Send Improved",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                letterSpacing = 0.3.sp
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 // ── Sub-composables ────────────────────────────────────────────────────────
 
-/**
- * Small text button in the top-right corner that toggles mode.
- * Shows "Word Builder" in sentence mode, "✕ Cancel Word" in word mode.
- */
 @Composable
 private fun ModeChip(isSentenceMode: Boolean, onToggle: () -> Unit) {
     TextButton(onClick = onToggle) {
@@ -402,10 +548,6 @@ private fun ModeChip(isSentenceMode: Boolean, onToggle: () -> Unit) {
     }
 }
 
-/**
- * Card showing accumulated letters (word mode) or words (sentence mode).
- * Only rendered when there's something to show (parent AnimatedVisibility handles that).
- */
 @Composable
 private fun BuilderCard(
     mode: BuilderMode,
@@ -450,12 +592,10 @@ private fun BuilderCard(
     }
 }
 
-/**
- * Action row for sentence mode.
- */
 @Composable
 private fun SentenceActionRow(
     canSend: Boolean,
+    isLoadingGemini: Boolean,
     onNextWord: () -> Unit,
     onSend: () -> Unit,
 ) {
@@ -470,17 +610,22 @@ private fun SentenceActionRow(
         )
         AppButton(
             onClick = onSend,
-            enabled = canSend,
+            enabled = canSend && !isLoadingGemini,
             modifier = Modifier.weight(1f)
         ) {
-            Text("Send", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+            if (isLoadingGemini) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Send", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+            }
         }
     }
 }
 
-/**
- * Action row for word mode.
- */
 @Composable
 private fun WordActionRow(
     canFinish: Boolean,

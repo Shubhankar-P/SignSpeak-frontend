@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.AddBox
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Login
+import com.signspeak.app.BuildConfig
 
 @Composable
 fun MainScreen(
@@ -107,7 +108,7 @@ fun MainScreen(
                     onClick = {
                         val roomCode = generateRoomCode()
                         FirebaseDatabase
-                            .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                            .getInstance(BuildConfig.FIREBASE_URL)
                             .getReference("rooms/$roomCode")
                             .child("message").setValue("Room created.")
                         onRoomCreated(roomCode)
@@ -160,7 +161,7 @@ private fun showJoinRoomDialog(
                 return@setPositiveButton
             }
             val dbRef = FirebaseDatabase
-                .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                .getInstance(BuildConfig.FIREBASE_URL)
                 .getReference("rooms/$roomCode")
             dbRef.get()
                 .addOnSuccessListener { snapshot ->

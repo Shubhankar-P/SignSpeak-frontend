@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.PanTool
+import com.signspeak.app.BuildConfig
 
 @Composable
 fun RoomOptionsScreen(
@@ -76,7 +77,7 @@ fun RoomOptionsScreen(
                 description = "Use your camera to translate sign language into text in real time",
                 onClick = {
                     FirebaseDatabase
-                        .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                        .getInstance(BuildConfig.FIREBASE_URL)
                         .getReference("rooms/$roomCode")
                         .child("mode").setValue("sign")
                     onSign2Text(roomCode)
@@ -90,7 +91,7 @@ fun RoomOptionsScreen(
                 description = "Speak and your words are transcribed and shared with the room",
                 onClick = {
                     FirebaseDatabase
-                        .getInstance("https://voicetotextapp-1e3eb-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                        .getInstance(BuildConfig.FIREBASE_URL)
                         .getReference("rooms/$roomCode")
                         .child("mode").setValue("voice")
                     onVoice2Text(roomCode)

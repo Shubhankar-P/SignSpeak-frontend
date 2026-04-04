@@ -201,30 +201,10 @@ fun Sign2TextScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-
-            // ── Mode toggle chip ───────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ModeChip(
-                    isSentenceMode = builderMode == BuilderMode.SENTENCE,
-                    onToggle = {
-                        if (builderMode == BuilderMode.SENTENCE) {
-                            builderMode = BuilderMode.WORD
-                            wordLetters.clear()
-                        } else {
-                            builderMode = BuilderMode.SENTENCE
-                            wordLetters.clear()
-                        }
-                    }
-                )
-            }
 
             // ── Camera preview ─────────────────────────────────────────────
             if (cameraGranted) {
@@ -343,6 +323,7 @@ fun Sign2TextScreen(
                 SentenceActionRow(
                     canSend         = sentenceWords.isNotEmpty(),
                     isLoadingGemini = isLoadingGemini,
+                    onWordBuilder   = { builderMode = BuilderMode.WORD; wordLetters.clear() },
                     onNextWord      = { if (liveGesture.isNotBlank()) sentenceWords.add(liveGesture.trim()) },
                     onSend          = {
                         val sentence = builtSentence
@@ -379,6 +360,7 @@ fun Sign2TextScreen(
             } else {
                 WordActionRow(
                     canFinish    = wordLetters.isNotEmpty(),
+                    onCancel     = { builderMode = BuilderMode.SENTENCE; wordLetters.clear() },
                     onNextLetter = { if (liveGesture.isNotBlank()) wordLetters.add(liveGesture.trim()) },
                     onDone       = {
                         if (wordLetters.isNotEmpty()) sentenceWords.add(builtWord)
@@ -430,17 +412,17 @@ fun Sign2TextScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Temporary test button — delete after confirming
-            TextButton(onClick = {
-                coroutineScope.launch {
-                    try {
-                        val result = gemini.generateContent("Say exactly: API_WORKING")
-                        Log.d("GEMINI_TEST", "Response: ${result.text}")
-                    } catch (e: Exception) {
-                        Log.e("GEMINI_TEST", "Error: ${e.message}")
-                    }
-                }
-            }) { Text("Test Gemini") }
+//            // Temporary test button — delete after confirming
+//            TextButton(onClick = {
+//                coroutineScope.launch {
+//                    try {
+//                        val result = gemini.generateContent("Say exactly: API_WORKING")
+//                        Log.d("GEMINI_TEST", "Response: ${result.text}")
+//                    } catch (e: Exception) {
+//                        Log.e("GEMINI_TEST", "Error: ${e.message}")
+//                    }
+//                }
+//            }) { Text("Test Gemini") }
         }
 
         // ── Gemini suggestion bottom sheet — placed inside Scaffold block ──
@@ -539,21 +521,6 @@ fun Sign2TextScreen(
 // ── Sub-composables ────────────────────────────────────────────────────────
 
 @Composable
-private fun ModeChip(isSentenceMode: Boolean, onToggle: () -> Unit) {
-    TextButton(onClick = onToggle) {
-        Text(
-            text = if (isSentenceMode) "Word Builder" else "✕  Cancel",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isSentenceMode)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.error
-        )
-    }
-}
-
-@Composable
 private fun BuilderCard(
     mode: BuilderMode,
     builtWord: String,
@@ -601,31 +568,52 @@ private fun BuilderCard(
 private fun SentenceActionRow(
     canSend: Boolean,
     isLoadingGemini: Boolean,
+    onWordBuilder: () -> Unit,
     onNextWord: () -> Unit,
     onSend: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        AppOutlinedButton(
-            text = "Next Word",
-            onClick = onNextWord,
-            modifier = Modifier.weight(1f)
-        )
-        AppButton(
-            onClick = onSend,
-            enabled = canSend && !isLoadingGemini,
-            modifier = Modifier.weight(1f)
+        TextButton(
+            onClick = onWordBuilder,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                1.5.dp, MaterialTheme.colorScheme.primary
+            )
         ) {
-            if (isLoadingGemini) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Send", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+            Text(
+                text = "Word Builder",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            AppOutlinedButton(
+                text = "Next Word",
+                onClick = onNextWord,
+                modifier = Modifier.weight(1f)
+            )
+            AppButton(
+                onClick = onSend,
+                enabled = canSend && !isLoadingGemini,
+                modifier = Modifier.weight(1f)
+            ) {
+                if (isLoadingGemini) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Send", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+                }
             }
         }
     }
@@ -634,24 +622,45 @@ private fun SentenceActionRow(
 @Composable
 private fun WordActionRow(
     canFinish: Boolean,
+    onCancel: () -> Unit,
     onNextLetter: () -> Unit,
     onDone: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        AppOutlinedButton(
-            text = "Next Letter",
-            onClick = onNextLetter,
-            modifier = Modifier.weight(1f)
-        )
-        AppButton(
-            onClick = onDone,
-            enabled = canFinish,
-            modifier = Modifier.weight(1f)
+        TextButton(
+            onClick = onCancel,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                1.5.dp, MaterialTheme.colorScheme.error
+            )
         ) {
-            Text("Done", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+            Text(
+                text = "✕  Cancel Word Builder",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AppOutlinedButton(
+                text = "Next Letter",
+                onClick = onNextLetter,
+                modifier = Modifier.weight(1f)
+            )
+            AppButton(
+                onClick = onDone,
+                enabled = canFinish,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Done", fontWeight = FontWeight.SemiBold, fontSize = 15.sp, letterSpacing = 0.3.sp)
+            }
         }
     }
 }

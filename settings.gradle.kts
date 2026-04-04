@@ -21,5 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VoiceToTextApp"
+rootProject.name = "SignSpeak"
 include(":app")

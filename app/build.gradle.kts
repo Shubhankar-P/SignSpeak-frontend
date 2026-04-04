@@ -1,7 +1,4 @@
-
-
-
-
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,16 +8,22 @@ plugins {
 }
 
 android {
-    namespace = "com.example.voicetotextapp"
+    namespace = "com.signspeak.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.voicetotextapp"
+        applicationId = "com.signspeak.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProps = Properties()
+        localProps.load(rootProject.file("local.properties").inputStream())
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProps["GEMINI_API_KEY"]}\"")
+        buildConfigField("String", "FIREBASE_URL",   "\"${localProps["FIREBASE_URL"]}\"")
+        buildConfigField("String", "NGROK_URL",      "\"${localProps["NGROK_URL"]}\"")
     }
 
     buildTypes {
@@ -44,6 +47,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,8 +61,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-
-    // ✅ Add these for XML UI
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
@@ -74,8 +76,9 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.activity)
-
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -84,4 +87,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }

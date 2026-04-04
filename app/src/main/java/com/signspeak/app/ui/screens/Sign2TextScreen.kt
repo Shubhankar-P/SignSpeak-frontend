@@ -188,7 +188,13 @@ fun Sign2TextScreen(
 
     // ── UI ─────────────────────────────────────────────────────────────────
     Scaffold(
-        topBar = { SignSpeakTopBar(onNavigateBack = onNavigateBack) },
+        topBar = {
+            SignSpeakTopBar(
+                title = "Sign to Text",
+                onNavigateBack = onNavigateBack,
+                roomCode = roomCode
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -200,13 +206,12 @@ fun Sign2TextScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
 
-            // ── Room code + mode toggle chip ───────────────────────────────
+            // ── Mode toggle chip ───────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                RoomCodeBadge(roomCode = roomCode)
                 ModeChip(
                     isSentenceMode = builderMode == BuilderMode.SENTENCE,
                     onToggle = {

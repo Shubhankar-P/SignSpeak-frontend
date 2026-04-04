@@ -132,19 +132,19 @@ fun RoomCodeBadge(roomCode: String, modifier: Modifier = Modifier) {
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(50.dp)
+                shape = RoundedCornerShape(35.dp)
             ),
-        shape = RoundedCornerShape(50.dp),
+        shape = RoundedCornerShape(35.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
     ) {
         Text(
-            text = "Room  $roomCode",
+            text = "Room: $roomCode",
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp,
             letterSpacing = 1.5.sp,
             fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         )
     }
 }

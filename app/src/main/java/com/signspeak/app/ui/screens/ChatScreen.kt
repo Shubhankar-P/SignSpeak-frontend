@@ -177,9 +177,13 @@ fun ChatScreen(
     // ── UI ─────────────────────────────────────────────────────────────────
     Scaffold(
         topBar = {
-            SignSpeakTopBar(onNavigateBack = {
-                if (role == "sender") showLeaveDialog = true else onNavigateBack()
-            })
+            SignSpeakTopBar(
+                title = "Voice to Text",
+                onNavigateBack = {
+                    if (role == "sender") showLeaveDialog = true else onNavigateBack()
+                },
+                roomCode = roomCode
+            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -193,7 +197,6 @@ fun ChatScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Room code badge
-            RoomCodeBadge(roomCode = roomCode, modifier = Modifier.align(Alignment.Start))
 
             // ── Output / status card ───────────────────────────────────────
             val borderColor by animateColorAsState(

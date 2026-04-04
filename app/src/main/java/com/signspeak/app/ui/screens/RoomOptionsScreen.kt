@@ -39,7 +39,12 @@ fun RoomOptionsScreen(
     onVoice2Text: (roomCode: String) -> Unit,
 ) {
     Scaffold(
-        topBar = { SignSpeakTopBar(onNavigateBack = onNavigateBack) },
+        topBar = {
+            SignSpeakTopBar(
+                title = "Mode Selection",
+                onNavigateBack = onNavigateBack
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(

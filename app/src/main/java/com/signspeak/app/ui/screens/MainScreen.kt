@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Login
 import com.signspeak.app.BuildConfig
+import androidx.compose.foundation.layout.size
 
 @Composable
 fun MainScreen(
@@ -49,9 +50,8 @@ fun MainScreen(
     val background = MaterialTheme.colorScheme.background
 
     Scaffold(
-        topBar = { SignSpeakTopBar() },
         containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    ){ innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -59,32 +59,40 @@ fun MainScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ── Hero image with gradient fade at the bottom ────────────────
+            // ── Full-bleed logo hero ───────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)   // takes available space, pushes buttons to bottom
+                    .weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.asl),
-                    contentDescription = "ASL illustration",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                // Gradient overlay so the image fades into the background colour
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    background.copy(alpha = 0.6f),
-                                    background
-                                ),
-                                startY = 200f
-                            )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.asl),
+                        contentDescription = "SignSpeak logo",
+                        modifier = Modifier.size(120.dp)
+                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "SignSpeak",
+                            fontSize = 34.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                )
+                        Text(
+                            text = "Bridge every conversation",
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             // ── Bottom sheet-style action area ────────────────────────────

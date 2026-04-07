@@ -67,7 +67,7 @@ app/src/main/java/com/signspeak/app/
 
 - Android Studio Hedgehog or later
 - Android SDK 26+
-- A running instance of the [SignSpeak Backend](https://github.com/YOUR_USERNAME/SignSpeak-backend)
+- A running instance of the [SignSpeak Backend](https://github.com/Shubhankar-P/SignSpeak-backend)
 - Firebase project with Realtime Database enabled
 - Gemini AI API key
 
@@ -78,8 +78,8 @@ app/src/main/java/com/signspeak/app/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/SignSpeak.git
-cd SignSpeak
+git clone https://github.com/Shubhankar-P/SignSpeak-frontend.git
+cd SignSpeak-frontend
 ```
 
 ### 2. Configure secrets
@@ -92,7 +92,7 @@ FIREBASE_URL=https://your-project.firebaseio.com
 BACKEND_URL=https://your-backend-url.com
 ```
 
-These are accessed at build time via `BuildConfig`. Do **not** hardcode keys in source files.
+These are accessed at build time via `BuildConfig`.
 
 ### 3. Add Firebase config
 
@@ -110,7 +110,7 @@ Open the project in Android Studio and run on a physical device or emulator (API
 
 This app requires the SignSpeak ML backend to be running and accessible. The backend handles hand landmark detection and sign classification.
 
-See: [SignSpeak Backend](https://github.com/YOUR_USERNAME/SignSpeak-backend)
+See: [SignSpeak Backend](https://github.com/Shubhankar-P/SignSpeak-backend)
 
 ---
 

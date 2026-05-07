@@ -153,7 +153,7 @@ fun Sign2TextScreen(
 
     // ── Socket.IO ──────────────────────────────────────────────────────────
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    var lastSentTime by remember { mutableStateOf(0L) }
+    val lastSentTime = remember { java.util.concurrent.atomic.AtomicLong(0L) }
 
     val socket: Socket = remember {
         IO.socket(BuildConfig.NGROK_URL)
@@ -223,8 +223,8 @@ fun Sign2TextScreen(
 
                             analysis.setAnalyzer(cameraExecutor) { image ->
                                 val now = System.currentTimeMillis()
-                                if (now - lastSentTime < 500) { image.close(); return@setAnalyzer }
-                                lastSentTime = now
+                                if (now - lastSentTime.get() < 500) { image.close(); return@setAnalyzer }
+                                lastSentTime.set(now)
                                 try {
                                     var bmp = imageProxyToBitmap(image)
                                     val rot = image.imageInfo.rotationDegrees

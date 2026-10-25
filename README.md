@@ -112,15 +112,6 @@ This app requires the SignSpeak ML backend to be running and accessible. The bac
 
 See: [SignSpeak Backend](https://github.com/Shubhankar-P/SignSpeak-backend)
 
----
 
-## Team
 
-Developed as a Final Year Project (BE, Semester VIII) at **Vidyalankar Institute of Technology**.
 
-| Name |
-|---|
-| Shubhankar Potnis |
-| Riddhi Welekar |
-| Aayush Samanta |
-| Aishwarya Pawar |
